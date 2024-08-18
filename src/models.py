@@ -1,45 +1,45 @@
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Date,
-    TIMESTAMP,
-    ForeignKey,
-    CheckConstraint,
-)
-from sqlalchemy.orm import DeclarativeBase, relationship
-from datetime import datetime, timezone
+from typing import Optional
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, Date, CheckConstraint
+from datetime import datetime, timedelta, timezone
 
 
 class Base(DeclarativeBase):
     pass
 
 
-class User(Base):
+class Users(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    email = Column(String, nullable=False)
-    username = Column(String, nullable=False)
-    password = Column(String, nullable=False)
-    created_at = Column(TIMESTAMP, default=datetime.now(timezone.utc))
-    updated_at = Column(TIMESTAMP, default=datetime.now(timezone.utc))
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(nullable=False)
+    username: Mapped[str] = mapped_column(nullable=False)
+    password: Mapped[str] = mapped_column(nullable=False)
+    # created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
+    # updated_at: Mapped[datetime] = mapped_column(
+    #     default=datetime.now(timezone.utc),
+    #     onupdate=datetime.now(timezone.utc),
+    # )
 
-    # Relationship with tasks
-    tasks = relationship("Task", back_populates="user")
+    # # Relationship with tasks
+    # tasks = relationship("Tasks", back_populates="users")
 
 
-class Task(Base):
+class Tasks(Base):
     __tablename__ = "tasks"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    title = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    # due_date = Column(Date)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    title: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
+    # due_date: Mapped[Optional[Date]] = mapped_column(
+    #     CheckConstraint("due_date >= CURRENT_DATE", name="due_date_check"),
+    #     default=lambda: datetime.now(timezone.utc).date() + timedelta(days=7),
+    # )
 
-    # status = Column(
-    #     String,
+    # status: Mapped[str] = mapped_column(
     #     CheckConstraint(
     #         "status IN ('pending', 'in-progress', 'completed', 'overdue')",
     #         name="status_check",
@@ -47,9 +47,13 @@ class Task(Base):
     #     default="pending",
     #     nullable=False,
     # )
-    created_at = Column(TIMESTAMP, default=datetime.now(timezone.utc))
-    updated_at = Column(TIMESTAMP, default=datetime.now(timezone.utc))
+    # created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
+    # updated_at: Mapped[datetime] = mapped_column(
+    #     default=datetime.now(timezone.utc),
+    #     onupdate=datetime.now(timezone.utc),
+    # )
 
-    # Relationship with user
-    user = relationship("User", back_populates="tasks")
-    # Make functions inside class to check due date and change status
+    # # Relationship with user
+    # user = relationship("Users", back_populates="tasks")
+
+    # TODO Make functions inside class to check due date and change status
