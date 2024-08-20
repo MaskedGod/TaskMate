@@ -1,11 +1,9 @@
 from typing import Optional
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, Date, CheckConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, Date, CheckConstraint, text
 from datetime import datetime, timedelta, timezone
 
-
-class Base(DeclarativeBase):
-    pass
+from src.database import Base
 
 
 class Users(Base):
@@ -15,14 +13,16 @@ class Users(Base):
     email: Mapped[str] = mapped_column(nullable=False)
     username: Mapped[str] = mapped_column(nullable=False)
     password: Mapped[str] = mapped_column(nullable=False)
-    # created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
-    # updated_at: Mapped[datetime] = mapped_column(
-    #     default=datetime.now(timezone.utc),
-    #     onupdate=datetime.now(timezone.utc),
-    # )
+    created_at: Mapped[datetime] = mapped_column(
+        server_default=text("TIMEZONE ('utc', now())")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=text("TIMEZONE ('utc', now())"),
+        onupdate=datetime.now(timezone.utc),
+    )
 
-    # # Relationship with tasks
-    # tasks = relationship("Tasks", back_populates="users")
+    # Relationship with tasks
+    tasks = relationship("Tasks", back_populates="users")
 
 
 class Tasks(Base):
@@ -49,11 +49,11 @@ class Tasks(Base):
     # )
     # created_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
     # updated_at: Mapped[datetime] = mapped_column(
-    #     default=datetime.now(timezone.utc),
+    #     default=None,
     #     onupdate=datetime.now(timezone.utc),
     # )
 
-    # # Relationship with user
-    # user = relationship("Users", back_populates="tasks")
+    # Relationship with user
+    users = relationship("Users", back_populates="tasks")
 
     # TODO Make functions inside class to check due date and change status

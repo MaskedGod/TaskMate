@@ -1,8 +1,8 @@
-"""create db
+"""initial
 
-Revision ID: 18d68bf861cb
+Revision ID: c153a1d04f55
 Revises: 
-Create Date: 2024-08-15 00:13:17.672655
+Create Date: 2024-08-20 21:18:24.242842
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '18d68bf861cb'
+revision: str = 'c153a1d04f55'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,8 +25,8 @@ def upgrade() -> None:
     sa.Column('email', sa.String(), nullable=False),
     sa.Column('username', sa.String(), nullable=False),
     sa.Column('password', sa.String(), nullable=False),
-    sa.Column('created_at', sa.TIMESTAMP(), nullable=True),
-    sa.Column('updated_at', sa.TIMESTAMP(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text("TIMEZONE ('utc', now())"), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text("TIMEZONE ('utc', now())"), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('tasks',
@@ -34,9 +34,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=False),
-    sa.Column('created_at', sa.TIMESTAMP(), nullable=True),
-    sa.Column('updated_at', sa.TIMESTAMP(), nullable=True),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###

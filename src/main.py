@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from .routers import users
+from .users import users
 
 
 app = FastAPI(title="TaskMate")
