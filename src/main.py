@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 
-from .users import users
+from .task.router import task_router
 
 
 app = FastAPI(title="TaskMate")
 
-app.include_router(users.router)
+app.include_router(task_router)
 
 
 @app.get("/")

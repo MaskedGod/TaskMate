@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     DB_HOST: str
     DB_PORT: str
     DB_NAME: str
+    SECRET: str
 
     @property
     def database_url(self):
