@@ -7,8 +7,8 @@ from alembic import context
 
 from src.config import settings
 from src.database import Base
-from src import models
 from src.task import models
+from src.auth import models
 
 
 # this is the Alembic Config object, which provides

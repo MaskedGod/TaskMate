@@ -9,7 +9,7 @@ task_router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 
 @task_router.post("/", status_code=status.HTTP_201_CREATED, response_model=DisplayTask)
-async def create_user(
+async def create_one_task(
     task_data: CreateTask, session: AsyncSession = Depends(get_session)
 ):
     new_task = await create_task(task_data, session)
@@ -39,7 +39,7 @@ async def update_task_status(
 ):
     update = await update_status(session, task_id, status)
 
-    return
+    return {"msg": "succesful"}
 
 
 @task_router.patch(

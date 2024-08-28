@@ -29,11 +29,11 @@ class Task(Base):
         nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(
-        server_default=text("TIMEZONE (, now())")
+        server_default=text("TIMEZONE ('utc', now())")
     )
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=text("TIMEZONE ( now())"),
-        onupdate=lambda: datetime.now(),
+        server_default=text("TIMEZONE ('utc', now())"),
+        onupdate=datetime.now(timezone.utc),
     )
 
     # Relationship with user

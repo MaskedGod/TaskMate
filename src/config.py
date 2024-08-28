@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     DB_PORT: str
     DB_NAME: str
     SECRET: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
 
     @property
     def database_url(self):
