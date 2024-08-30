@@ -36,11 +36,11 @@ class Task(Base):
         server_default=text("TIMEZONE ('utc', now())"),
         onupdate=datetime.now(timezone.utc),
     )
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("user.id", ondelete="CASCADE"), nullable=False
-    )
+    # user_id: Mapped[int] = mapped_column(
+    #     ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+    # )
 
-    # Relationship with user
-    user: Mapped["User"] = relationship("User", back_populates="task")
+    # # Relationship with user
+    # user: Mapped["User"] = relationship("User", back_populates="task")
 
     # TODO Make functions inside class to check due date and change status
