@@ -13,10 +13,9 @@ task_router = APIRouter(prefix="/tasks", tags=["Tasks"])
 @task_router.post("/", status_code=status.HTTP_201_CREATED, response_model=DisplayTask)
 async def create_one_task(
     task_data: CreateTask,
-    session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
 ):
-    new_task = await create_task(task_data, session, current_user)
+    new_task = await create_task(task_data, session)
 
     return new_task
 

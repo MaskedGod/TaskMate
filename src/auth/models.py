@@ -23,4 +23,4 @@ class User(Base):
     )
 
     # Relationship with tasks
-    tasks: Mapped[list["Task"]] = relationship("Task", back_populates="user")
+    task: Mapped[list["Task"]] = relationship("Task", back_populates="user")

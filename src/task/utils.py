@@ -7,9 +7,7 @@ from .models import Task
 from .schemas import CreateTask
 
 
-async def create_task(
-    session: AsyncSession, task_data: CreateTask, current_user
-) -> Task:
+async def create_task(session: AsyncSession, task_data: CreateTask) -> Task:
 
     new_task = Task(**task_data.model_dump())
 
