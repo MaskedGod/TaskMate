@@ -4,15 +4,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_session
 from .schemas import CreateTask, DisplayTask, TaskStatus
 from .utils import create_task, get_task, get_tasks, update_status, update_task
+from ..auth.models import User
+from ..auth.dependencies import get_current_user
 
 task_router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 
 @task_router.post("/", status_code=status.HTTP_201_CREATED, response_model=DisplayTask)
 async def create_one_task(
-    task_data: CreateTask, session: AsyncSession = Depends(get_session)
+    task_data: CreateTask,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ):
-    new_task = await create_task(task_data, session)
+    new_task = await create_task(task_data, session, current_user)
 
     return new_task
 

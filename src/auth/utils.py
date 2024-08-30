@@ -17,12 +17,14 @@ credentials_exception = HTTPException(
 )
 
 
-def hash(password: str):
-    return pwd_context.hash(password)
+def hash_password(plain_password: str) -> str:
+
+    return pwd_context.hash(plain_password)
 
 
-def verify(password, hashed_password):
-    return pwd_context.verify(password, hashed_password)
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+
+    return pwd_context.verify(plain_password, hashed_password)
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None):
@@ -57,7 +59,7 @@ def verify_access_token(token: str):
 async def create_user(user_data: UserCreate, session: AsyncSession) -> User:
 
     new_user = User(**user_data.model_dump())
-    new_user.password = hash(user_data.password)
+    new_user.password = hash_password(user_data.password)
 
     session.add(new_user)
     await session.commit()

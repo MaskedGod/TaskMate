@@ -1,10 +1,18 @@
+from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, Depends, status
 
 from ..database import get_session
+from ..config import settings
 from .models import User
-from .utils import create_access_token, create_user, verify, credentials_exception
+from .utils import (
+    create_access_token,
+    create_user,
+    verify_password,
+    credentials_exception,
+)
 from .schemas import UserCreate, UserOut
 
 
@@ -26,10 +34,18 @@ async def login(
     session: AsyncSession = Depends(get_session),
 ):
 
-    user = await session.query(User).filter(User.email == form_data.email).first()
+    # user = await session.select(User).filter(User.email == form_data.email).first()
+    stmt = select(User).where(User.email == form_data.username)
+    result = await session.execute(stmt)
+    user = result.scalars().first()
 
-    if not user or not verify(form_data.password, user.hashed_password):
+    if not user or not verify_password(form_data.password, user.password):
         raise credentials_exception
 
-    access_token = create_access_token(data={"sub": user.email})
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+
     return {"access_token": access_token, "token_type": "bearer"}
