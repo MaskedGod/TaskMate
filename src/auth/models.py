@@ -22,5 +22,5 @@ class User(Base):
         onupdate=datetime.now(timezone.utc),
     )
 
-    # # Relationship with tasks
-    # task: Mapped[list["Task"]] = relationship("Task", back_populates="user")
+    # Relationship with tasks
+    task: Mapped[list["Task"]] = relationship("Task", back_populates="user")

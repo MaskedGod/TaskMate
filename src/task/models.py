@@ -11,9 +11,6 @@ class Task(Base):
     __tablename__ = "task"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    # user_id: Mapped[int] = mapped_column(
-    #     ForeignKey("user.id", ondelete="CASCADE"), nullable=False
-    # )
     title: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
     # due_date: Mapped[Optional[Date]] = mapped_column(
@@ -36,11 +33,11 @@ class Task(Base):
         server_default=text("TIMEZONE ('utc', now())"),
         onupdate=datetime.now(timezone.utc),
     )
-    # user_id: Mapped[int] = mapped_column(
-    #     ForeignKey("user.id", ondelete="CASCADE"), nullable=False
-    # )
+    owner_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+    )
 
-    # # Relationship with user
-    # user: Mapped["User"] = relationship("User", back_populates="task")
+    # Relationship with user
+    user: Mapped["User"] = relationship("User", back_populates="task")
 
     # TODO Make functions inside class to check due date and change status

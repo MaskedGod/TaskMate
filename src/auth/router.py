@@ -1,22 +1,17 @@
-from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..database import get_session
-from ..config import settings
-from .models import User
 from .utils import (
-    create_access_token,
     create_user,
-    verify_password,
-    credentials_exception,
+    get_current_user,
+    login_user,
 )
 from .schemas import UserCreate, UserOut
 
 
-auth_router = APIRouter(prefix="/users", tags=["Users"])
+auth_router = APIRouter(prefix="/user", tags=["User"])
 
 
 @auth_router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserOut)
@@ -28,24 +23,19 @@ async def register_user(
     return new_user
 
 
-@auth_router.post("/login")
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+@auth_router.post("/login", status_code=status.HTTP_202_ACCEPTED)
+async def user_authentication(
+    user_credentials: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
 
-    # user = await session.select(User).filter(User.email == form_data.email).first()
-    stmt = select(User).where(User.email == form_data.username)
-    result = await session.execute(stmt)
-    user = result.scalars().first()
+    access_token = await login_user(user_credentials, session)
 
-    if not user or not verify_password(form_data.password, user.password):
-        raise credentials_exception
+    return access_token
 
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
-
-    return {"access_token": access_token, "token_type": "bearer"}
+@auth_router.get("/me", status_code=status.HTTP_200_OK, response_model=UserOut)
+async def get_authenticated_user(
+    current_user=Depends(get_current_user),
+):
+    return current_user
