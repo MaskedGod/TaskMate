@@ -35,8 +35,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 async def create_user(user_data: UserCreate, session: AsyncSession) -> User:
+    try:
+        new_user = User(**user_data.model_dump())
+        if not new_user.email or not new_user.username or not new_user.password:
+            raise ValueError("All fields must be provided and cannot be empty.")
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    new_user = User(**user_data.model_dump())
     new_user.password = hash_password(user_data.password)
 
     session.add(new_user)

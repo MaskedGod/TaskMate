@@ -1,4 +1,5 @@
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -12,6 +13,15 @@ from .schemas import UserCreate, UserOut
 
 
 auth_router = APIRouter(prefix="/user", tags=["User"])
+
+
+@auth_router.get("/health", status_code=status.HTTP_200_OK)
+async def health_check(session: AsyncSession = Depends(get_session)):
+    try:
+        await session.execute(text("SELECT 1"))
+        return {"status": "Database connection is healthy!"}
+    except Exception as e:
+        return {"status": "Database connection failed", "error": str(e)}
 
 
 @auth_router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserOut)

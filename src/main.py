@@ -12,4 +12,4 @@ app.include_router(auth_router)
 
 @app.get("/")
 def home():
-    return {"Chaos": "Reigns"}
+    return {"msg": "Chaos Reigns"}
