@@ -1,16 +1,11 @@
 import asyncio
 from typing import AsyncGenerator
-from fastapi.testclient import TestClient
 from httpx import AsyncClient
 import pytest
-from sqlalchemy import MetaData, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.config import settings
-from src.database import DatabaseSessionError, get_session, metadata
-
-from src.auth import models
-from src.task import models
+from src.database import get_session, metadata
 from src.main import app
 
 async_engine_test = create_async_engine(url=settings.test_database_url)
@@ -20,17 +15,6 @@ async_session_test = async_sessionmaker(
 )
 
 metadata.bind = async_engine_test
-
-
-# async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
-#     session = async_session_test()
-#     try:
-#         yield session
-#     finally:
-#         await session.close()
-
-
-# app.dependency_overrides[get_session] = override_get_session
 
 
 @pytest.fixture(scope="session")
@@ -66,9 +50,35 @@ async def client(session):
         yield ac
 
 
+# @pytest.fixture(scope="session")
+# async def auth_token(client):
+#     login_response = await client.post(
+#         "/user/login",
+#         data={"username": "tester@example.com", "password": "tester"},
+#     )
+
+#     assert login_response.status_code == 202
+#     token = login_response.json()["access_token"]
+#     yield token
+
+
 @pytest.fixture(scope="session")
 async def auth_token(client):
-    # Login to get the token
+
+    register_response = await client.post(
+        "/user/",
+        json={
+            "email": "tester@example.com",
+            "username": "tester",
+            "password": "tester",
+        },
+    )
+
+    if register_response.status_code == 422:
+        assert register_response.json()["detail"] == "User already exist"
+    else:
+        assert register_response.status_code == 201
+
     login_response = await client.post(
         "/user/login",
         data={"username": "tester@example.com", "password": "tester"},

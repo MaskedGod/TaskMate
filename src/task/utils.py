@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
-from fastapi import HTTPException
+from datetime import datetime
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -22,7 +22,14 @@ async def find_task_by_id(session: AsyncSession, task_id: int, current_user):
 async def create_one_task(
     session: AsyncSession, task_data: CreateTask, current_user
 ) -> Task:
-    new_task = Task(owner_id=current_user.id, **task_data.model_dump())
+    try:
+        new_task = Task(owner_id=current_user.id, **task_data.model_dump())
+        if not new_task.title or not new_task.description or not new_task.status:
+            raise ValueError("All fields must be provided and cannot be empty.")
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
+        )
 
     session.add(new_task)
     await session.commit()

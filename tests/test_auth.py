@@ -1,8 +1,6 @@
 from httpx import AsyncClient
-import pytest
-from sqlalchemy import text
-from src.auth.schemas import UserCreate, UserOut
-from tests.conftest import client, session, event_loop, auth_token
+from src.auth.schemas import  UserOut
+from tests.conftest import client,  auth_token
 
 
 async def test_health(client: AsyncClient):
@@ -41,7 +39,7 @@ async def test_register_user_missing_username_field(client: AsyncClient):
         },
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 422
     response_data = response.json()
     assert response_data["detail"] == "All fields must be provided and cannot be empty."
 
@@ -71,7 +69,7 @@ async def test_register_user_duplicate_email(client: AsyncClient):
         },
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 422
     response_data = response.json()
     assert response_data["detail"] == "User already exist"
 
