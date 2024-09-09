@@ -61,6 +61,21 @@ async def test_register(client: AsyncClient):
     assert UserOut(**response_data)
 
 
+async def test_register_user_duplicate_email(client: AsyncClient):
+    response = await client.post(
+        "/user/",
+        json={
+            "email": "tester@example.com",
+            "username": "tester",
+            "password": "tester",
+        },
+    )
+
+    assert response.status_code == 400
+    response_data = response.json()
+    assert response_data["detail"] == "User already exist"
+
+
 async def test_user_authentication(client: AsyncClient):
     response = await client.post(
         "/user/login",
@@ -73,14 +88,35 @@ async def test_user_authentication(client: AsyncClient):
     assert response_json["token_type"] == "bearer"
 
 
-async def test_login_invalid_credentials(client: AsyncClient):
+async def test_user_authentication_invalid_credentials(client: AsyncClient):
     response = await client.post(
-        "/login",
-        data={"username": "wrong_username", "password": "wrong_password"},
+        "/user/login/login",
+        data={"username": "wrong@example.com", "password": "wrong_password"},
     )
     assert response.status_code == 404
     response_data = response.json()
     assert response_data["detail"] == "Not Found"
+
+
+async def test_user_authentication_missing_credentials(client: AsyncClient):
+    response = await client.post(
+        "/user/login",
+        data={"username": "wrong@example.com", "password": ""},
+    )
+    assert response.status_code == 422
+    response_data = response.json()["detail"][0]
+    assert response_data["msg"] == "Field required"
+
+
+async def test_get_current_user_invalid_credentials(
+    client: AsyncClient,
+):
+    headers = {"Authorization": f"Bearer {"wrong_token"}"}
+    response = await client.get("/user/me", headers=headers)
+
+    assert response.status_code == 401
+    response_data = response.json()
+    assert response_data["detail"] == "Could not validate credentials"
 
 
 async def test_get_current_user(client: AsyncClient, auth_token):

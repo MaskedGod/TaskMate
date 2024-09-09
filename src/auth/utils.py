@@ -42,6 +42,12 @@ async def create_user(user_data: UserCreate, session: AsyncSession) -> User:
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
+    user = await check_user_exists(session, new_user.email)
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User already exist"
+        )
+
     new_user.password = hash_password(user_data.password)
 
     session.add(new_user)
@@ -49,6 +55,14 @@ async def create_user(user_data: UserCreate, session: AsyncSession) -> User:
     await session.refresh(new_user)
 
     return new_user
+
+
+async def check_user_exists(session: AsyncSession, email: EmailStr) -> bool:
+    stmt = select(User).filter(User.email == email)
+    result = await session.execute(stmt)
+    user = result.scalars().first()
+
+    return user is not None
 
 
 async def get_user(session: AsyncSession, username: EmailStr):
