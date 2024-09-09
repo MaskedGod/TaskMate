@@ -1,10 +1,10 @@
 from httpx import AsyncClient
+
 from src.auth.schemas import  UserOut
-from tests.conftest import client,  auth_token
 
 
 async def test_health(client: AsyncClient):
-    response = await client.get("/user/health")
+    response = await client.get("/health")
 
     assert response.status_code == 200
     response_data = response.json()

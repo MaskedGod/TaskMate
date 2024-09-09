@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth.utils import get_current_user
@@ -14,6 +14,8 @@ from .utils import (
 )
 
 task_router = APIRouter(prefix="/tasks", tags=["Tasks"])
+
+MAX_LIMIT = 100
 
 
 @task_router.post("/", status_code=status.HTTP_201_CREATED, response_model=DisplayTask)
@@ -31,7 +33,7 @@ async def create_task(
 @task_router.get("/", status_code=status.HTTP_200_OK, response_model=list[DisplayTask])
 async def get_tasks(
     offset: int = 0,
-    limit: int = 10,
+    limit: int = Query(default=10, le=MAX_LIMIT),
     session: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
 ):

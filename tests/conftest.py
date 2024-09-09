@@ -87,3 +87,20 @@ async def auth_token(client):
     assert login_response.status_code == 202
     token = login_response.json()["access_token"]
     yield token
+
+
+@pytest.fixture(scope="session")
+async def create_posts(client, auth_token):
+    header = {"Authorization": f"Bearer {auth_token}"}
+    for i in range(2, 16):
+        response = await client.post(
+            "/tasks/",
+            headers=header,
+            json={
+                "title": f"{i}t",
+                "description": "string",
+                "status": "pending",
+            },
+        )
+
+        assert response.status_code == 201
