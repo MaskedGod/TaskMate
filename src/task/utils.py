@@ -55,7 +55,7 @@ async def update_status(session: AsyncSession, task_id: int, status: str, curren
 
     await session.commit()
 
-    return "success"
+    return "status updated"
 
 
 async def update_task(
@@ -66,11 +66,11 @@ async def update_task(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    if task_data.title is not None:
+    if len(task_data.title) > 0:
         task.title = task_data.title
-    if task_data.description is not None:
+    if len(task_data.title) > 0:
         task.description = task_data.description
-    if task_data.status is not None:
+    if len(task_data.title) > 0:
         task.status = task_data.status
 
     task.updated_at = datetime.now()
@@ -87,4 +87,4 @@ async def remove_task(session: AsyncSession, task_id: int, current_user):
     await session.delete(task)
     await session.commit()
 
-    return {"msg": "OK"}
+    return {"msg": "deleted"}

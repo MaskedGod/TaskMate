@@ -32,8 +32,8 @@ async def create_task(
 
 @task_router.get("/", status_code=status.HTTP_200_OK, response_model=list[DisplayTask])
 async def get_tasks(
-    offset: int = 0,
-    limit: int = Query(default=10, le=MAX_LIMIT),
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=10, le=MAX_LIMIT, ge=0),
     session: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
 ):
@@ -43,8 +43,8 @@ async def get_tasks(
 
 
 @task_router.get("/id", status_code=status.HTTP_200_OK, response_model=DisplayTask)
-async def get_task(
-    task_id: int,
+async def get_task_by_id(
+    task_id: int = Query(default=1, ge=1),
     session: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
 ):
@@ -53,10 +53,10 @@ async def get_task(
     return task
 
 
-@task_router.patch("/id/status", status_code=status.HTTP_204_NO_CONTENT)
+@task_router.patch("/id/status", status_code=status.HTTP_200_OK)
 async def update_task_status(
-    task_id: int,
-    status: TaskStatus,
+    status: TaskStatus | None,
+    task_id: int = Query(default=1, ge=1),
     session: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
 ):
@@ -69,8 +69,8 @@ async def update_task_status(
     "/id/edit", status_code=status.HTTP_200_OK, response_model=DisplayTask
 )
 async def edit_task(
-    task_id: int,
     task_data: CreateTask | None,
+    task_id: int = Query(default=1, ge=1),
     session: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
 ):
@@ -81,7 +81,7 @@ async def edit_task(
 
 @task_router.delete("/id/delete", status_code=status.HTTP_200_OK)
 async def delete_task(
-    task_id: int,
+    task_id: int = Query(default=1, ge=1),
     session: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
 ):

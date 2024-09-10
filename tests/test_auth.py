@@ -106,6 +106,16 @@ async def test_user_authentication_missing_credentials(client: AsyncClient):
     assert response_data["msg"] == "Field required"
 
 
+async def test_get_current_user(client: AsyncClient, auth_token):
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    response = await client.get("/user/me", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert response_data["email"] == "tester@example.com"
+
+
+
 async def test_get_current_user_invalid_credentials(
     client: AsyncClient,
 ):
@@ -116,11 +126,12 @@ async def test_get_current_user_invalid_credentials(
     response_data = response.json()
     assert response_data["detail"] == "Could not validate credentials"
 
-
-async def test_get_current_user(client: AsyncClient, auth_token):
-    headers = {"Authorization": f"Bearer {auth_token}"}
+async def test_get_current_user_unauthorized(client: AsyncClient):
+    headers = {"Authorization": "wrongtoken"}
     response = await client.get("/user/me", headers=headers)
 
-    assert response.status_code == 200
+
+    assert response.status_code == 401
     response_data = response.json()
-    assert response_data["email"] == "tester@example.com"
+    assert response_data["detail"] == "Not authenticated"
+
