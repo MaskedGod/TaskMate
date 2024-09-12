@@ -13,10 +13,9 @@ class Task(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
-    # , 'overdue'
     status: Mapped[str] = mapped_column(
         CheckConstraint(
-            "status IN ('pending', 'in-progress', 'completed')",
+            "status IN ('pending', 'in-progress', 'completed', 'overdue' )",
             name="status_check",
         ),
         default="pending",
@@ -29,15 +28,13 @@ class Task(Base):
         server_default=text("TIMEZONE ('utc', now())"),
         onupdate=datetime.now(timezone.utc),
     )
-    # due_date: Mapped[Optional[Date]] = mapped_column(
-    #     CheckConstraint("due_date >= CURRENT_DATE", name="due_date_check"),
-    #     default=lambda: datetime.now(timezone.utc).date() + timedelta(days=7),
-    # )
+    due_date: Mapped[Optional[datetime]] = mapped_column(
+        CheckConstraint("due_date >= CURRENT_DATE", name="due_date_check"),
+        default=lambda: datetime.now(timezone.utc).date() + timedelta(days=7),
+    )
     owner_id: Mapped[int] = mapped_column(
         ForeignKey("user.id", ondelete="CASCADE"), nullable=False
     )
 
     # Relationship with user
     user: Mapped["User"] = relationship("User", back_populates="task")
-
-    # TODO Make functions inside class to check due date and change status

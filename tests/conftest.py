@@ -2,6 +2,7 @@ import asyncio
 from typing import AsyncGenerator
 from httpx import AsyncClient
 import pytest
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.config import settings
@@ -15,6 +16,14 @@ async_session_test = async_sessionmaker(
 )
 
 metadata.bind = async_engine_test
+
+
+today_date = datetime.now(timezone.utc).date() + timedelta(days=7)
+# Combine date with time set to 00:00:00
+# date_with_time = datetime.combine(today_date, datetime.min.time(), tzinfo=timezone.utc)
+# Convert to ISO 8601 string
+# iso_date_string = date_with_time.isoformat()
+iso_date_string = today_date.isoformat()
 
 
 @pytest.fixture(scope="session")
@@ -100,6 +109,7 @@ async def create_posts(client, auth_token):
                 "title": f"{i}t",
                 "description": "string",
                 "status": "pending",
+                "due_date": iso_date_string,
             },
         )
 

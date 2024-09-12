@@ -1,10 +1,12 @@
-from datetime import datetime
+from datetime import date, datetime
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from .models import Task
-from .schemas import CreateTask
+from .schemas import CreateTask, EditTask
+
+# TODO edit due time endpoint and util
 
 
 async def find_task_by_id(session: AsyncSession, task_id: int, current_user):
@@ -26,6 +28,7 @@ async def create_one_task(
         new_task = Task(owner_id=current_user.id, **task_data.model_dump())
         if not new_task.title or not new_task.description or not new_task.status:
             raise ValueError("All fields must be provided and cannot be empty.")
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
@@ -46,25 +49,10 @@ async def get_many_tasks(session: AsyncSession, offset: int, limit: int, current
     return tasks[offset : offset + limit]
 
 
-async def update_status(session: AsyncSession, task_id: int, status: str, current_user):
-    task = await find_task_by_id(session, task_id, current_user)
-
-    task.status = status
-
-    task.updated_at = datetime.now()
-
-    await session.commit()
-
-    return "status updated"
-
-
 async def update_task(
-    session: AsyncSession, task_id: int, task_data: CreateTask, current_user
+    session: AsyncSession, task_id: int, task_data: EditTask, current_user
 ):
     task = await find_task_by_id(session, task_id, current_user)
-
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
 
     if len(task_data.title) > 0:
         task.title = task_data.title
@@ -81,6 +69,17 @@ async def update_task(
     return task
 
 
+async def update_status(session: AsyncSession, task_id: int, status: str, current_user):
+    task = await find_task_by_id(session, task_id, current_user)
+
+    task.status = status
+    task.updated_at = datetime.now()
+
+    await session.commit()
+
+    return "status updated"
+
+
 async def remove_task(session: AsyncSession, task_id: int, current_user):
     task = await find_task_by_id(session, task_id, current_user)
 
@@ -88,3 +87,16 @@ async def remove_task(session: AsyncSession, task_id: int, current_user):
     await session.commit()
 
     return {"msg": "deleted"}
+
+
+async def update_due_date(
+    session: AsyncSession, task_id: int, new_due_date: date, current_user
+):
+    task = await find_task_by_id(session, task_id, current_user)
+
+    task.due_date = new_due_date
+    task.updated_at = datetime.now()
+
+    await session.commit()
+
+    return "Due data updated"

@@ -1,40 +1,43 @@
+import asyncio
+from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# from apscheduler.schedulers.asyncio import AsyncIOScheduler
-# from contextlib import asynccontextmanager
-
+from .utils import check_for_overdue_tasks
 from .database import get_session
 
 from .task.router import task_router
 from .auth.router import auth_router
 
 
-app = FastAPI(title="TaskMate")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async def periodic_task():
+        async for session in get_session():
+            while True:
+                print("Overdue tasks check started")
+                try:
+                    print("Session acquired")
+                    result = await check_for_overdue_tasks(session)
+                    print("Overdue tasks check result:", result)
+                except Exception as e:
+                    print(f"An error occurred: {e}")
+                finally:
+                    await asyncio.sleep(3600)  # Check every hour for testing
+
+    task = asyncio.create_task(periodic_task())
+
+    yield
+
+    task.cancel()
+    print("Task finished")
+
+
+app = FastAPI(title="TaskMate", lifespan=lifespan)
 
 app.include_router(task_router)
 app.include_router(auth_router)
-
-# scheduler = AsyncIOScheduler()
-
-
-# async def check_task_expiry():
-#     # logic for checking and updating expired tasks
-#     print("Checking for expired tasks...")
-
-
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     scheduler.add_job(check_task_expiry, "interval", minutes=60)
-#     scheduler.start()
-#     print("Scheduler started")
-#     yield
-#     print("Shutting down scheduler")
-#     scheduler.shutdown()
-
-
-# app.router.lifespan_context = lifespan
 
 
 @app.get("/health", status_code=status.HTTP_200_OK)

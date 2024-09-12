@@ -8,7 +8,14 @@ class TaskStatus(str, Enum):
     pending = "pending"
     in_progress = "in-progress"
     completed = "completed"
-    # overdue = "overdue"
+
+
+class TaskStatusInsider(str, Enum):
+
+    pending = "pending"
+    in_progress = "in-progress"
+    completed = "completed"
+    overdue = "overdue"
 
 
 class CreateTask(BaseModel):
@@ -16,7 +23,14 @@ class CreateTask(BaseModel):
     title: str
     description: str
     status: TaskStatus
-    # due_date: date | None
+    due_date: date | None
+
+
+class EditTask(BaseModel):
+
+    title: str
+    description: str
+    status: TaskStatus
 
 
 class DisplayTask(BaseModel):
@@ -24,4 +38,5 @@ class DisplayTask(BaseModel):
     id: int
     title: str
     description: str
-    status: TaskStatus
+    status: TaskStatusInsider
+    due_date: date

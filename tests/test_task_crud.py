@@ -1,6 +1,6 @@
 from httpx import AsyncClient
-
 from src.task.schemas import DisplayTask
+from tests.conftest import iso_date_string
 
 
 async def test_create_task(client: AsyncClient, auth_token):
@@ -8,11 +8,15 @@ async def test_create_task(client: AsyncClient, auth_token):
     response = await client.post(
         "/tasks/",
         headers=header,
-        json={"title": "1t", "description": "string", "status": "pending"},
+        json={
+            "title": "1t",
+            "description": "string",
+            "status": "pending",
+            "due_date": iso_date_string,
+        },
     )
-
-    assert response.status_code == 201
     response_data = response.json()
+    assert response.status_code == 201
     assert DisplayTask(**response_data)
 
 
@@ -21,7 +25,12 @@ async def test_create_task_invalid_data(client: AsyncClient, auth_token):
     response = await client.post(
         "/tasks/",
         headers=header,
-        json={"title": "", "description": "string", "status": "pending"},
+        json={
+            "title": "",
+            "description": "string",
+            "status": "pending",
+            "due_date": iso_date_string,
+        },
     )
 
     assert response.status_code == 422
@@ -142,7 +151,7 @@ async def test_get_task_by_id_unauthorized(client: AsyncClient):
 async def test_update_task_status(client: AsyncClient, auth_token):
     header = {"Authorization": f"Bearer {auth_token}"}
     response = await client.patch(
-        "/tasks/id/status",
+        "/tasks/id/edit/status",
         headers=header,
         params={"task_id": 1, "status": "in-progress"},
     )
@@ -155,7 +164,7 @@ async def test_update_task_status(client: AsyncClient, auth_token):
 async def test_update_task_invalid_status(client: AsyncClient, auth_token):
     header = {"Authorization": f"Bearer {auth_token}"}
     response = await client.patch(
-        "/tasks/id/status",
+        "/tasks/id/edit/status",
         headers=header,
         params={"task_id": 1, "status": "wrong"},
     )
@@ -171,7 +180,7 @@ async def test_update_task_invalid_status(client: AsyncClient, auth_token):
 async def test_update_task_status_task_not_found(client: AsyncClient, auth_token):
     header = {"Authorization": f"Bearer {auth_token}"}
     response = await client.patch(
-        "/tasks/id/status",
+        "/tasks/id/edit/status",
         headers=header,
         params={"task_id": 22, "status": "in-progress"},
     )
@@ -184,7 +193,7 @@ async def test_update_task_status_task_not_found(client: AsyncClient, auth_token
 async def test_update_task_status_unauthorized(client: AsyncClient):
     header = {"Authorization": "wrongtoken"}
     response = await client.patch(
-        "/tasks/id/status",
+        "/tasks/id/edit/status",
         headers=header,
         params={"task_id": 1, "status": "in-progress"},
     )
@@ -200,7 +209,11 @@ async def test_edit_task(client: AsyncClient, auth_token):
         "/tasks/id/edit",
         headers=header,
         params={"task_id": 1},
-        json={"title": "string", "description": "string", "status": "completed"},
+        json={
+            "title": "string",
+            "description": "string",
+            "status": "completed",
+        },
     )
 
     assert response.status_code == 200
