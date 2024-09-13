@@ -18,7 +18,6 @@ from .utils import (
 task_router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 MAX_LIMIT = 100
-# TODO edit due time endpoint and util
 
 
 @task_router.post("/", status_code=status.HTTP_201_CREATED, response_model=DisplayTask)

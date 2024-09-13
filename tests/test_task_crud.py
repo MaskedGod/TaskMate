@@ -43,7 +43,12 @@ async def test_create_task_invalid_status(client: AsyncClient, auth_token):
     response = await client.post(
         "/tasks/",
         headers=header,
-        json={"title": "string", "description": "string", "status": "wrong"},
+        json={
+            "title": "string",
+            "description": "string",
+            "status": "wrong",
+            "due_date": iso_date_string,
+        },
     )
 
     assert response.status_code == 422
@@ -54,12 +59,17 @@ async def test_create_task_invalid_status(client: AsyncClient, auth_token):
     )
 
 
-async def test_create_task_unauthorized(client: AsyncClient):
+async def test_create_task_not_authenticated(client: AsyncClient):
     header = {"Authorization": "wrongtoken"}
     response = await client.post(
         "/tasks/",
         headers=header,
-        json={"title": "1t", "description": "string", "status": "pending"},
+        json={
+            "title": "1t",
+            "description": "string",
+            "status": "pending",
+            "due_date": iso_date_string,
+        },
     )
 
     assert response.status_code == 401
@@ -111,7 +121,7 @@ async def test_get_tasks_empty_list(client: AsyncClient, auth_token):
     assert len(response_data) == 0
 
 
-async def test_get_tasks_unauthorized(client: AsyncClient):
+async def test_get_tasks_not_authenticated(client: AsyncClient):
     header = {"Authorization": "wrong_token"}
     response = await client.get("/tasks/", headers=header)
 
@@ -132,16 +142,78 @@ async def test_get_task_by_id(client: AsyncClient, auth_token):
 
 async def test_get_task_by_id_not_found(client: AsyncClient, auth_token):
     header = {"Authorization": f"Bearer {auth_token}"}
-    response = await client.get("/tasks/id", headers=header, params={"task_id": 22})
+    response = await client.get("/tasks/id", headers=header, params={"task_id": 9999})
 
     assert response.status_code == 404
     response_data = response.json()
     assert response_data["detail"] == "Task not found"
 
 
-async def test_get_task_by_id_unauthorized(client: AsyncClient):
+async def test_get_task_by_id_not_authenticated(client: AsyncClient):
     header = {"Authorization": "wrongtoken"}
     response = await client.get("/tasks/id", headers=header, params={"task_id": 1})
+
+    assert response.status_code == 401
+    response_data = response.json()
+    assert response_data["detail"] == "Not authenticated"
+
+
+async def test_edit_task(client: AsyncClient, auth_token):
+    header = {"Authorization": f"Bearer {auth_token}"}
+    response = await client.patch(
+        "/tasks/id/edit",
+        headers=header,
+        params={"task_id": 1},
+        json={
+            "title": "string",
+            "description": "string",
+            "status": "completed",
+        },
+    )
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert DisplayTask(**response_data)
+    response_data["id"] == 1
+    response_data["status"] == "completed"
+
+
+async def test_edit_task_not_found(client: AsyncClient, auth_token):
+    header = {"Authorization": f"Bearer {auth_token}"}
+    response = await client.patch(
+        "/tasks/id/edit",
+        headers=header,
+        params={"task_id": 9999},
+        json={"title": "string", "description": "string", "status": "completed"},
+    )
+
+    assert response.status_code == 404
+    response_data = response.json()
+    assert response_data["detail"] == "Task not found"
+
+
+async def test_edit_task_invalid_data(client: AsyncClient, auth_token):
+    header = {"Authorization": f"Bearer {auth_token}"}
+    response = await client.patch(
+        "/tasks/id/edit",
+        headers=header,
+        params={"task_id": 1},
+        json={"description": "string", "status": "completed"},
+    )
+
+    assert response.status_code == 422
+    response_data = response.json()["detail"][0]
+    assert response_data["msg"] == "Field required"
+
+
+async def test_edit_task_not_authenticated(client: AsyncClient):
+    header = {"Authorization": "wrongtoken"}
+    response = await client.patch(
+        "/tasks/id/edit",
+        headers=header,
+        params={"task_id": 1},
+        json={"title": "string", "description": "string", "status": "completed"},
+    )
 
     assert response.status_code == 401
     response_data = response.json()
@@ -182,7 +254,7 @@ async def test_update_task_status_task_not_found(client: AsyncClient, auth_token
     response = await client.patch(
         "/tasks/id/edit/status",
         headers=header,
-        params={"task_id": 22, "status": "in-progress"},
+        params={"task_id": 9999, "status": "in-progress"},
     )
 
     assert response.status_code == 404
@@ -190,7 +262,7 @@ async def test_update_task_status_task_not_found(client: AsyncClient, auth_token
     assert response_data["detail"] == "Task not found"
 
 
-async def test_update_task_status_unauthorized(client: AsyncClient):
+async def test_update_task_status_not_authenticated(client: AsyncClient):
     header = {"Authorization": "wrongtoken"}
     response = await client.patch(
         "/tasks/id/edit/status",
@@ -203,33 +275,47 @@ async def test_update_task_status_unauthorized(client: AsyncClient):
     assert response_data["detail"] == "Not authenticated"
 
 
-async def test_edit_task(client: AsyncClient, auth_token):
-    header = {"Authorization": f"Bearer {auth_token}"}
+async def test_edit_expiration_date(client: AsyncClient, auth_token):
+    header = {
+        "Authorization": f"Bearer {auth_token}",
+    }
     response = await client.patch(
-        "/tasks/id/edit",
+        "/tasks/id/edit/due_date",
         headers=header,
+        json="2024-09-24",
         params={"task_id": 1},
-        json={
-            "title": "string",
-            "description": "string",
-            "status": "completed",
-        },
     )
 
     assert response.status_code == 200
     response_data = response.json()
-    assert DisplayTask(**response_data)
-    response_data["id"] == 1
-    response_data["status"] == "completed"
+    assert response_data["msg"] == "Due data updated"
 
 
-async def test_edit_task_not_found(client: AsyncClient, auth_token):
-    header = {"Authorization": f"Bearer {auth_token}"}
+async def test_edit_expiration_past_date(client: AsyncClient, auth_token):
+    header = {
+        "Authorization": f"Bearer {auth_token}",
+    }
     response = await client.patch(
-        "/tasks/id/edit",
+        "/tasks/id/edit/due_date",
         headers=header,
-        params={"task_id": 22},
-        json={"title": "string", "description": "string", "status": "completed"},
+        json="2024-08-24",
+        params={"task_id": 1},
+    )
+
+    assert response.status_code == 422
+    response_data = response.json()
+    assert response_data["detail"] == "The new due date cannot be in the past"
+
+
+async def test_edit_expiration_date_task_not_found(client: AsyncClient, auth_token):
+    header = {
+        "Authorization": f"Bearer {auth_token}",
+    }
+    response = await client.patch(
+        "/tasks/id/edit/due_date",
+        headers=header,
+        json="2024-09-24",
+        params={"task_id": 9999},
     )
 
     assert response.status_code == 404
@@ -237,27 +323,15 @@ async def test_edit_task_not_found(client: AsyncClient, auth_token):
     assert response_data["detail"] == "Task not found"
 
 
-async def test_edit_task_invalid_data(client: AsyncClient, auth_token):
-    header = {"Authorization": f"Bearer {auth_token}"}
+async def test_edit_expiration_date_not_authenticated(client: AsyncClient):
+    header = {
+        "Authorization": "wrongtoken",
+    }
     response = await client.patch(
-        "/tasks/id/edit",
+        "/tasks/id/edit/due_date",
         headers=header,
-        params={"task_id": 1},
-        json={"description": "string", "status": "completed"},
-    )
-
-    assert response.status_code == 422
-    response_data = response.json()["detail"][0]
-    assert response_data["msg"] == "Field required"
-
-
-async def test_edit_task_unauthorized(client: AsyncClient):
-    header = {"Authorization": "wrongtoken"}
-    response = await client.patch(
-        "/tasks/id/edit",
-        headers=header,
-        params={"task_id": 1},
-        json={"title": "string", "description": "string", "status": "completed"},
+        json="2024-09-24",
+        params={"task_id": 22},
     )
 
     assert response.status_code == 401
@@ -283,7 +357,7 @@ async def test_delete_task_not_found(client: AsyncClient, auth_token):
     response = await client.delete(
         "/tasks/id/delete",
         headers=header,
-        params={"task_id": 22},
+        params={"task_id": 9999},
     )
 
     assert response.status_code == 404
@@ -291,7 +365,7 @@ async def test_delete_task_not_found(client: AsyncClient, auth_token):
     assert response_data["detail"] == "Task not found"
 
 
-async def test_delete_task_unauthorized(client: AsyncClient):
+async def test_delete_task_not_authenticated(client: AsyncClient):
     header = {"Authorization": "wrongtoken"}
     response = await client.delete(
         "/tasks/id/delete",

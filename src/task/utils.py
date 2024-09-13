@@ -1,12 +1,10 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from .models import Task
 from .schemas import CreateTask, EditTask
-
-# TODO edit due time endpoint and util
 
 
 async def find_task_by_id(session: AsyncSession, task_id: int, current_user):
@@ -93,6 +91,12 @@ async def update_due_date(
     session: AsyncSession, task_id: int, new_due_date: date, current_user
 ):
     task = await find_task_by_id(session, task_id, current_user)
+
+    if new_due_date < datetime.now(timezone.utc).date():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="The new due date cannot be in the past",
+        )
 
     task.due_date = new_due_date
     task.updated_at = datetime.now()
