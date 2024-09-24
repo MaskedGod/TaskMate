@@ -41,6 +41,11 @@ app.include_router(auth_router)
 
 
 @app.get("/health", status_code=status.HTTP_200_OK)
+async def home(session: AsyncSession = Depends(get_session)):
+    return {"msg": "it's on now!"}
+
+
+@app.get("/health", status_code=status.HTTP_200_OK)
 async def health_check(session: AsyncSession = Depends(get_session)):
     try:
         await session.execute(text("SELECT 1"))
