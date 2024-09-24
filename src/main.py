@@ -40,8 +40,8 @@ app.include_router(task_router)
 app.include_router(auth_router)
 
 
-@app.get("/health", status_code=status.HTTP_200_OK)
-async def home(session: AsyncSession = Depends(get_session)):
+@app.get("/")
+async def home():
     return {"msg": "it's on now!"}
 
 
