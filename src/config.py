@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     TEST_DB_PORT: str
     TEST_DB_NAME: str
 
+    model_config = SettingsConfigDict(env_file=".env")
+
     @property
     def database_url(self):
 
@@ -25,9 +27,6 @@ class Settings(BaseSettings):
     def test_database_url(self):
 
         return f"postgresql+asyncpg://{self.TEST_DB_USER}:{self.TEST_DB_PASS}@{self.TEST_DB_HOST}:{self.TEST_DB_PORT}/{self.TEST_DB_NAME}"
-
-    # prod env
-    model_config = SettingsConfigDict(env_file="/etc/secrets/.env")
 
 
 settings = Settings()
