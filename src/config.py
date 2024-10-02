@@ -10,13 +10,17 @@ class Settings(BaseSettings):
     SECRET: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
-    TEST_DB_USER: str
-    TEST_DB_PASS: str
-    TEST_DB_HOST: str
-    TEST_DB_PORT: str
-    TEST_DB_NAME: str
+    # TEST_DB_USER: str
+    # TEST_DB_PASS: str
+    # TEST_DB_HOST: str
+    # TEST_DB_PORT: str
+    # TEST_DB_NAME: str
 
     model_config = SettingsConfigDict(env_file=".env")
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        print(f"Loaded DB_USER: {self.DB_USER}")
 
     @property
     def database_url(self):
